@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gridworks Systems — Building the grid that outlasts us</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF3EC;
+    --panel:#FFFFFF;
+    --ink:#173630;
+    --ink-soft:#5B6D66;
+    --line:#DFE6E1;
+    --mint:#BFE6C4;
+    --mint-deep:#8FCF9B;
+    --periwinkle:#A1B0FF;
+    --periwinkle-soft:#EDEFFF;
+    --blue:#3C4757;
+    --blue-soft:#EAEDF1;
+    --danger:#A13B33;
+    --danger-soft:#F6E7E4;
+    --success:#2F6B4C;
+    --success-soft:#E4F0E7;
+    --mint-soft:#EAF7EC;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Manrope',sans-serif;letter-spacing:-0.01em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  ::selection{background:var(--mint);color:var(--ink);}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+
+  /* ---- decorative organic blobs (Nordic biosolutions motif) ---- */
+  .blobfield{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .blob{position:absolute;border-radius:42% 58% 63% 37% / 41% 44% 56% 59%;filter:blur(0px);opacity:0.55;}
+  .blob.b1{width:420px;height:420px;background:radial-gradient(circle at 30% 30%, var(--mint), transparent 70%);top:-140px;right:-100px;}
+  .blob.b2{width:280px;height:280px;background:radial-gradient(circle at 40% 40%, var(--periwinkle), transparent 70%);bottom:-80px;left:-60px;opacity:0.4;}
+
+  /* ---- shell ---- */
+  .nav{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:16px clamp(20px,5vw,56px);
+    background:rgba(251,250,247,0.9);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Manrope',sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:-0.02em;}
+  .logo .mark{width:28px;height:28px;flex:none;}
+  .navlinks{display:flex;gap:2px;align-items:center;background:var(--panel);padding:5px;border-radius:999px;border:1px solid var(--line);}
+  .navlinks button{
+    background:none;border:none;padding:9px 18px;border-radius:999px;
+    font-size:0.86rem;font-weight:700;color:var(--ink-soft);
+    transition:all .18s ease;
+  }
+  .navlinks button.active{background:var(--ink);color:#fff;}
+  .navlinks button:not(.active):hover{background:var(--mint-soft);color:var(--ink);}
+  main{max-width:1180px;margin:0 auto;padding:0 clamp(20px,5vw,56px);position:relative;z-index:1;}
+  .view{display:none;}
+  .view.active{display:block;animation:fade .4s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+  @media (prefers-reduced-motion:reduce){.view.active{animation:none;}html{scroll-behavior:auto;}}
+
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:0.72rem;letter-spacing:0.12em;
+    text-transform:uppercase;color:var(--success);font-weight:600;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--mint-deep);display:inline-block;}
+
+  /* ---- hero ---- */
+  .hero{padding:72px 0 40px;position:relative;}
+  .hero h1{font-size:clamp(2.6rem,5.6vw,4.4rem);line-height:1.03;font-weight:800;margin:16px 0 22px;max-width:16ch;}
+  .hero p.lede{font-size:1.18rem;color:var(--ink-soft);max-width:48ch;line-height:1.6;margin-bottom:32px;}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{
+    padding:14px 26px;border-radius:999px;border:1.5px solid var(--ink);
+    font-weight:700;font-size:0.92rem;background:var(--ink);color:#fff;
+    transition:transform .15s ease, background .15s ease, box-shadow .15s ease;display:inline-flex;align-items:center;gap:8px;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(23,54,48,0.18);}
+  .btn.ghost{background:transparent;color:var(--ink);}
+  .btn.ghost:hover{background:var(--ink);color:#fff;}
+  .btn.accent{background:var(--mint-deep);border-color:var(--mint-deep);color:#0E2318;}
+  .btn.accent:hover{box-shadow:0 8px 22px rgba(143,207,155,0.45);}
+  .btn.sm{padding:9px 16px;font-size:0.82rem;border-radius:999px;}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+
+  /* ---- signature: connected-node pipeline (biology-cluster motif applied to grid nodes) ---- */
+  .pipeline{
+    display:flex;align-items:center;margin:46px 0 8px;padding:26px 10px;position:relative;
+  }
+  .pipeline::before{
+    content:"";position:absolute;left:40px;right:40px;top:50%;height:2px;
+    background:repeating-linear-gradient(90deg,var(--line) 0 8px,transparent 8px 14px);
+    transform:translateY(-1px);z-index:0;
+  }
+  .pipeline .stage{
+    flex:1;display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;z-index:1;gap:10px;
+  }
+  .pipeline .stage .node{
+    width:46px;height:46px;border-radius:50%;background:var(--panel);border:2px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:0.78rem;font-weight:600;color:var(--ink-soft);
+    transition:all .2s ease;
+  }
+  .pipeline .stage .lbl{font-weight:700;font-size:0.82rem;}
+  .pipeline .stage.current .node{background:var(--ink);border-color:var(--ink);color:var(--mint);transform:scale(1.12);}
+  .pipeline .stage.done .node{background:var(--mint-soft);border-color:var(--mint-deep);color:var(--success);}
+  .pipeline .stage.rejected .node{background:var(--danger-soft);border-color:var(--danger);color:var(--danger);}
+  .pipeline .stage.rejected .lbl{color:var(--danger);}
+
+  section{padding:60px 0;border-top:1px solid var(--line);}
+  section.first{border-top:none;}
+  .sectionhead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:30px;flex-wrap:wrap;}
+  .sectionhead h2{font-size:clamp(1.7rem,3.2vw,2.4rem);font-weight:800;margin:8px 0 0;}
+
+  /* values grid */
+  .valgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .valcard{background:var(--panel);padding:28px 24px;border-radius:20px;border:1px solid var(--line);transition:border-color .15s;}
+  .valcard:hover{border-color:var(--mint-deep);}
+  .valcard .num{font-family:'IBM Plex Mono',monospace;font-size:0.72rem;color:var(--success);background:var(--mint-soft);padding:3px 10px;border-radius:20px;display:inline-block;margin-bottom:16px;font-weight:600;}
+  .valcard h3{font-size:1.06rem;margin:0 0 10px;font-weight:800;}
+  .valcard p{font-size:0.9rem;color:var(--ink-soft);line-height:1.55;margin:0;}
+
+  /* CSR */
+  .csrgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;}
+  .csrcard{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:26px;}
+  .csrcard .stat{font-family:'Manrope',sans-serif;font-size:2.3rem;font-weight:800;color:var(--success);}
+  .csrcard h3{font-size:1rem;margin:2px 0 8px;font-weight:700;}
+  .csrcard p{font-size:0.87rem;color:var(--ink-soft);line-height:1.5;margin:0;}
+
+  /* mission/vision */
+  .mv{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:720px){.mv{grid-template-columns:1fr;}}
+  .mvcard{background:var(--ink);color:#fff;border-radius:24px;padding:36px;position:relative;overflow:hidden;}
+  .mvcard.alt{background:var(--mint);color:var(--ink);}
+  .mvcard .eyebrow{color:var(--mint);}
+  .mvcard .eyebrow::before{background:var(--mint);}
+  .mvcard.alt .eyebrow{color:var(--ink);}
+  .mvcard.alt .eyebrow::before{background:var(--ink);}
+  .mvcard p{font-size:1.12rem;line-height:1.55;margin-top:14px;font-family:'Manrope',sans-serif;font-weight:600;}
+
+  footer{border-top:1px solid var(--line);padding:40px clamp(20px,5vw,56px);margin-top:40px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:0.82rem;color:var(--ink-soft);}
+
+  /* ---- careers ---- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+  .chip{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:0.82rem;font-weight:700;color:var(--ink-soft);}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .joblist{display:flex;flex-direction:column;gap:10px;}
+  .jobrow{background:var(--panel);padding:22px 24px;border-radius:18px;border:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;cursor:pointer;transition:all .15s;}
+  .jobrow:hover{border-color:var(--mint-deep);background:var(--mint-soft);}
+  .jobrow h3{margin:0 0 6px;font-size:1.06rem;font-weight:800;}
+  .jobrow .meta{font-size:0.8rem;color:var(--ink-soft);display:flex;gap:10px;flex-wrap:wrap;}
+  .tag{background:var(--periwinkle-soft);color:#4C55A8;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:999px;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:32px;}
+  .backlink{background:none;border:none;color:var(--ink-soft);font-weight:700;font-size:0.85rem;margin-bottom:18px;padding:0;}
+  .backlink:hover{color:var(--ink);}
+
+  form .field{margin-bottom:18px;}
+  form label{display:block;font-size:0.82rem;font-weight:700;margin-bottom:6px;color:var(--ink-soft);}
+  form input,form textarea,form select{
+    width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+    font-family:inherit;font-size:0.92rem;background:var(--bg);color:var(--ink);
+  }
+  form input:focus,form textarea:focus,form select:focus{border-color:var(--mint-deep);}
+  form textarea{resize:vertical;min-height:90px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+
+  .statusbox{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:32px;}
+  .idbadge{font-family:'IBM Plex Mono',monospace;background:var(--ink);color:var(--mint);padding:5px 12px;border-radius:999px;font-size:0.85rem;}
+
+  /* ---- admin ---- */
+  .gate{max-width:380px;margin:80px auto;text-align:center;}
+  .adminbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+  .adtabs{display:flex;gap:6px;background:var(--panel);padding:5px;border-radius:999px;border:1px solid var(--line);}
+  .adtabs button{padding:8px 16px;border-radius:999px;border:none;background:none;font-size:0.82rem;font-weight:700;color:var(--ink-soft);}
+  .adtabs button.active{background:var(--ink);color:#fff;}
+  .board{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;overflow-x:auto;}
+  @media(max-width:1000px){.board{grid-template-columns:repeat(5,220px);}}
+  .col{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:200px;}
+  .col h4{font-size:0.78rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--ink-soft);margin:6px 8px 12px;display:flex;justify-content:space-between;}
+  .accard{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:11px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
+  .accard:hover{border-color:var(--mint-deep);}
+  .accard .nm{font-weight:700;font-size:0.85rem;}
+  .accard .rl{font-size:0.72rem;color:var(--ink-soft);margin-top:2px;}
+  .accard .id{font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--ink-soft);margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;font-size:0.85rem;}
+  th{text-align:left;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--ink-soft);padding:12px;border-bottom:1px solid var(--line);}
+  td{padding:12px;border-bottom:1px solid var(--line);}
+  tr:hover td{background:var(--mint-soft);}
+  .pill{padding:4px 12px;border-radius:999px;font-size:0.72rem;font-weight:700;}
+  .pill.Applied{background:var(--periwinkle-soft);color:#4C55A8;}
+  .pill.Screening{background:var(--blue-soft);color:var(--blue);}
+  .pill.Interview{background:#F3E7FB;color:#7A3FA0;}
+  .pill.Offer{background:var(--success-soft);color:var(--success);}
+  .pill.Hired{background:var(--success);color:#fff;}
+  .pill.Rejected{background:var(--danger-soft);color:var(--danger);}
+
+  .drawer-backdrop{position:fixed;inset:0;background:rgba(23,54,48,0.45);z-index:100;display:none;align-items:flex-start;justify-content:flex-end;}
+  .drawer-backdrop.open{display:flex;}
+  .drawer{width:min(460px,100%);height:100%;background:var(--bg);overflow-y:auto;padding:28px;animation:slide .28s ease;}
+  @keyframes slide{from{transform:translateX(30px);opacity:0;}to{transform:none;opacity:1;}}
+  .drawer h3{margin:0 0 4px;font-weight:800;}
+  .closex{float:right;background:none;border:none;font-size:1.3rem;color:var(--ink-soft);}
+  .stagebtns{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0;}
+  .stagebtns button{padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--panel);font-size:0.76rem;font-weight:700;}
+  .stagebtns button.current{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .note{margin-top:16px;}
+  .empty{color:var(--ink-soft);font-size:0.85rem;text-align:center;padding:30px 0;}
+  .searchbar{display:flex;gap:10px;margin-bottom:16px;}
+  .searchbar input{flex:1;padding:11px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--panel);}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--mint);padding:13px 22px;border-radius:999px;font-size:0.85rem;font-weight:700;z-index:200;opacity:0;pointer-events:none;transition:opacity .25s;}
+  .toast.show{opacity:1;}
+  .small{font-size:0.8rem;color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">
+    <svg class="mark" viewBox="0 0 28 28" fill="none"><circle cx="9" cy="9" r="6.5" fill="#BFE6C4"/><circle cx="19" cy="19" r="7" fill="#173630"/><circle cx="19" cy="8" r="3.5" fill="#A1B0FF"/></svg>
+    Gridworks Systems
+  </div>
+  <div class="navlinks" id="navlinks"></div>
+</nav>
+
+<main>
+
+  <!-- HOME -->
+  <section id="view-home" class="view">
+    <div class="hero first" style="border-top:none;">
+      <div class="blobfield"><div class="blob b1"></div><div class="blob b2"></div></div>
+      <span class="eyebrow">Grid automation, built to outlast the century</span>
+      <h1>We build the control systems that keep clean power running.</h1>
+      <p class="lede">Gridworks designs the sensing, switching and software layer sitting between renewable generation and the grid — so utilities can trust intermittent power the way they trusted coal.</p>
+      <div class="btnrow">
+        <button class="btn accent" data-nav="careers">View open roles →</button>
+        <button class="btn ghost" data-nav="home" data-scroll="mission">Our mission</button>
+      </div>
+
+      <div class="pipeline" id="homepipeline"></div>
+      <p class="small" style="margin-top:8px;">Every hire, every substation rollout, every install — same pipeline, no shortcuts. It's how we ship.</p>
+    </div>
+
+    <section id="mission">
+      <div class="mv">
+        <div class="mvcard">
+          <span class="eyebrow">Mission</span>
+          <p>Give every utility, however small, the same grade of grid intelligence that only the largest operators can build in-house today.</p>
+        </div>
+        <div class="mvcard alt">
+          <span class="eyebrow">Vision</span>
+          <p>A grid where adding another solar farm or battery bank is a software update, not a five-year interconnection study.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sectionhead">
+        <div><span class="eyebrow">What we hold ourselves to</span><h2>Core values</h2></div>
+      </div>
+      <div class="valgrid" id="valgrid"></div>
+    </section>
+
+    <section>
+      <div class="sectionhead">
+        <div><span class="eyebrow">Beyond the balance sheet</span><h2>Community &amp; sustainability</h2></div>
+      </div>
+      <div class="csrgrid" id="csrgrid"></div>
+    </section>
+  </section>
+
+  <!-- CAREERS -->
+  <section id="view-careers" class="view">
+    <div class="hero first" style="padding-top:44px;">
+      <div class="blobfield"><div class="blob b1" style="width:280px;height:280px;top:-100px;"></div></div>
+      <span class="eyebrow">Careers</span>
+      <h1 style="font-size:clamp(2rem,4vw,2.8rem);">Open roles at Gridworks</h1>
+      <p class="lede">Field engineering, firmware, and the people who keep both honest. Every application moves through the same tracked pipeline — check its status any time.</p>
+    </div>
+    <div id="joblistwrap"></div>
+  </section>
+
+  <!-- JOB DETAIL -->
+  <section id="view-jobdetail" class="view">
+    <div style="padding-top:32px;" id="jobdetailwrap"></div>
+  </section>
+
+  <!-- APPLY -->
+  <section id="view-apply" class="view">
+    <div style="padding-top:32px;max-width:640px;margin:0 auto;" id="applywrap"></div>
+  </section>
+
+  <!-- STATUS -->
+  <section id="view-status" class="view">
+    <div style="padding-top:44px;max-width:640px;margin:0 auto;">
+      <span class="eyebrow">Applicant portal</span>
+      <h1 style="font-size:clamp(1.9rem,4vw,2.5rem);margin:10px 0 8px;">Check your application status</h1>
+      <p class="small" style="margin-bottom:24px;">Enter the application ID you received after applying, along with the email you applied with.</p>
+      <div class="statusbox">
+        <div class="grid2">
+          <div class="field"><label>Application ID</label><input id="stat-id" placeholder="GW-2026-XXXX"></div>
+          <div class="field"><label>Email</label><input id="stat-email" placeholder="you@email.com"></div>
+        </div>
+        <button class="btn accent" onclick="checkStatus()">Check status</button>
+        <div id="statresult" style="margin-top:24px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section id="view-admin" class="view">
+    <div id="adminwrap"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div>© 2026 Gridworks Systems Inc. — Fictional company, built for demonstration.</div>
+  <div><button class="backlink" data-nav="admin">Team portal →</button></div>
+</footer>
+
+<div class="drawer-backdrop" id="drawerBackdrop"><div class="drawer" id="drawerContent"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================= DATA LAYER ============================= */
+const STAGES = ["Applied","Screening","Interview","Offer","Hired","Rejected"];
+const ACTIVE_STAGES = ["Applied","Screening","Interview","Offer","Hired"];
+
+const DEFAULT_JOBS = [
+  {id:"role-substation-fw", title:"Firmware Engineer, Substation Controllers", dept:"Engineering", location:"Austin, TX (hybrid)", type:"Full-time",
+   summary:"Write the real-time C/Rust that runs on the boxes bolted to actual substations.",
+   description:"You'll own firmware for the RTU boards that sit inside substation cabinets, talking to relays over IEC 61850 and reporting up through our fleet layer. Most of the job is making failure modes boring: brownouts, dropped packets, a technician power-cycling a box in the rain.",
+   requirements:["4+ years embedded C or Rust in production","Comfortable with IEC 61850 / DNP3 or willing to learn fast","Has debugged a device you couldn't just SSH into","Field visits a few times a year, boots required"]},
+  {id:"role-grid-data", title:"Grid Data Engineer", dept:"Data & Platform", location:"Remote (US)", type:"Full-time",
+   summary:"Turn a firehose of phasor measurements into something a control-room operator can act on in under a second.",
+   description:"You'll build the streaming pipelines that ingest telemetry from thousands of field devices and serve it to both our operator dashboards and our anomaly-detection models. Latency budgets are measured in milliseconds, not minutes.",
+   requirements:["Strong with Kafka/Flink or similar streaming stack","Comfortable owning a service in production, on-call included","Bonus: time-series or power-systems background"]},
+  {id:"role-field-tech", title:"Field Deployment Technician", dept:"Operations", location:"Multiple regions — travel 60%", type:"Full-time",
+   summary:"You're the person actually inside the substation cabinet making our hardware talk to theirs.",
+   description:"Install, commission, and troubleshoot Gridworks controllers on-site with utility crews. You'll be the face of the company to line engineers who've seen a dozen vendors overpromise — credibility is earned in the first ten minutes.",
+   requirements:["Electrical or industrial controls background","Comfortable in an energized substation environment with proper PPE","Valid driver's license, willing to travel regionally"]},
+  {id:"role-recruiter", title:"Technical Recruiter", dept:"People", location:"Austin, TX", type:"Full-time",
+   summary:"Help engineers who've never worked in energy understand why the grid is the most interesting infra problem left.",
+   description:"Own full-cycle recruiting for engineering and field roles — sourcing, screening, and shepherding candidates through a pipeline that's honest about timelines and never ghosts anyone.",
+   requirements:["2+ years technical recruiting","Has built or improved a structured hiring process before","Writes plainly, no recruiter-speak"]}
+];
+
+let JOBS = [];
+let APPLICANTS = {}; // keyed by application id
+let CURRENT_JOB = null;
+let ADMIN_STAGE_FILTER = "all";
+let ADMIN_VIEW = "board";
+let ADMIN_SEARCH = "";
+let isAdmin = false;
+
+async function loadData(){
+  try{
+    const j = await window.storage.get('jobs', true);
+    JOBS = j ? JSON.parse(j.value) : DEFAULT_JOBS;
+  }catch(e){ JOBS = DEFAULT_JOBS; await saveJobs(); }
+  try{
+    const a = await window.storage.get('applicants', true);
+    APPLICANTS = a ? JSON.parse(a.value) : {};
+  }catch(e){ APPLICANTS = {}; }
+}
+async function saveJobs(){ try{ await window.storage.set('jobs', JSON.stringify(JOBS), true); }catch(e){} }
+async function saveApplicants(){ try{ await window.storage.set('applicants', JSON.stringify(APPLICANTS), true); }catch(e){} }
+
+function genAppId(){
+  const yr = new Date().getFullYear();
+  const rnd = Math.floor(1000+Math.random()*9000);
+  return `GW-${yr}-${rnd}`;
+}
+function fmtDate(iso){ return new Date(iso).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
+
+/* ============================= NAV / ROUTER ============================= */
+const NAVS = [
+  {id:"home", label:"Home"},
+  {id:"careers", label:"Careers"},
+  {id:"status", label:"Check status"},
+  {id:"admin", label:"Team portal"}
+];
+function renderNav(active){
+  const el = document.getElementById('navlinks');
+  el.innerHTML = NAVS.map(n=>`<button data-nav="${n.id}" class="${active===n.id?'active':''}">${n.label}</button>`).join('');
+}
+function goTo(view, scrollId){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  renderNav(view);
+  window.scrollTo({top:0,behavior:'instant'});
+  if(view==='home') renderHome();
+  if(view==='careers') renderCareers();
+  if(view==='status') { /* static */ }
+  if(view==='admin') renderAdmin();
+  if(scrollId){ setTimeout(()=>document.getElementById(scrollId)?.scrollIntoView({behavior:'smooth'}),80); }
+}
+document.addEventListener('click', (e)=>{
+  const nb = e.target.closest('[data-nav]');
+  if(nb){ goTo(nb.dataset.nav, nb.dataset.scroll); }
+});
+
+/* ============================= HOME ============================= */
+const VALUES = [
+  {t:"Integrity and transparency", d:"We tell utilities, regulators, and each other the truth about our systems — uptime, risk, and setbacks included, especially when it's bad news."},
+  {t:"Sustainability and impact", d:"Every faster interconnection is fossil generation displaced. We measure our work by the clean power it lets onto the grid, not just the contracts it closes."},
+  {t:"Innovation with purpose", d:"We build for the hardest constraint in the room — a technician in the rain, a regulator's audit, a grid that can't afford downtime — not for the demo."},
+  {t:"Customer-centric", d:"Utilities bet their grid on us. We design and support around their operators' reality, not our roadmap's convenience."}
+];
+const CSR = [
+  {stat:"38", label:"Public school STEM labs equipped", body:"Retired field kit — sensors, controllers, wiring rigs — refurbished and donated to technical high schools in the regions we operate."},
+  {stat:"1,200 t", label:"CO₂e avoided annually via faster interconnection", body:"Every month shaved off a renewable project's interconnection queue is a month less fossil generation runs to cover the gap."},
+  {stat:"14", label:"Apprenticeships funded with local trade unions", body:"Paid electrical apprenticeships co-funded with regional IBEW locals, feeding our own field technician pipeline."}
+];
+function renderHome(){
+  document.getElementById('valgrid').innerHTML = VALUES.map((v,i)=>`
+    <div class="valcard">
+      <span class="num">0${i+1}</span>
+      <h3>${v.t}</h3>
+      <p>${v.d}</p>
+    </div>`).join('');
+  document.getElementById('csrgrid').innerHTML = CSR.map(c=>`
+    <div class="csrcard">
+      <div class="stat">${c.stat}</div>
+      <h3>${c.label}</h3>
+      <p>${c.body}</p>
+    </div>`).join('');
+  document.getElementById('homepipeline').innerHTML = ACTIVE_STAGES.map((s,i)=>`
+    <div class="stage ${i===0?'current':''}">
+      <div class="node">0${i+1}</div>
+      <div class="lbl">${s}</div>
+    </div>`).join('');
+}
+
+/* ============================= CAREERS ============================= */
+function renderCareers(){
+  const depts = ["All", ...new Set(JOBS.map(j=>j.dept))];
+  const wrap = document.getElementById('joblistwrap');
+  wrap.innerHTML = `
+    <div class="filters" id="deptfilters">
+      ${depts.map(d=>`<button class="chip ${d==='All'?'active':''}" data-dept="${d}">${d}</button>`).join('')}
+    </div>
+    <div class="joblist" id="joblist"></div>
+  `;
+  renderJobList('All');
+  document.getElementById('deptfilters').addEventListener('click', e=>{
+    const c = e.target.closest('.chip'); if(!c) return;
+    document.querySelectorAll('#deptfilters .chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    renderJobList(c.dataset.dept);
+  });
+}
+function renderJobList(dept){
+  const list = dept==='All' ? JOBS : JOBS.filter(j=>j.dept===dept);
+  const el = document.getElementById('joblist');
+  if(!list.length){ el.innerHTML = `<div class="empty" style="background:var(--panel);border-radius:10px;">No open roles in this department right now.</div>`; return; }
+  el.innerHTML = list.map(j=>`
+    <div class="jobrow" data-job="${j.id}">
+      <div>
+        <h3>${j.title}</h3>
+        <div class="meta"><span class="tag">${j.dept}</span><span>${j.location}</span><span>${j.type}</span></div>
+      </div>
+      <button class="btn ghost sm">View role →</button>
+    </div>`).join('');
+  el.querySelectorAll('.jobrow').forEach(r=>r.addEventListener('click', ()=>openJob(r.dataset.job)));
+}
+function openJob(id){
+  CURRENT_JOB = JOBS.find(j=>j.id===id);
+  if(!CURRENT_JOB) return;
+  document.getElementById('jobdetailwrap').innerHTML = `
+    <button class="backlink" data-nav="careers">← Back to open roles</button>
+    <div class="card">
+      <span class="tag">${CURRENT_JOB.dept}</span>
+      <h1 style="margin:12px 0 6px;font-size:1.9rem;">${CURRENT_JOB.title}</h1>
+      <div class="small" style="margin-bottom:20px;">${CURRENT_JOB.location} · ${CURRENT_JOB.type}</div>
+      <p style="line-height:1.6;">${CURRENT_JOB.description}</p>
+      <h3 style="font-size:1rem;margin-top:22px;">What we're looking for</h3>
+      <ul style="line-height:1.8;padding-left:20px;color:var(--ink-soft);">
+        ${CURRENT_JOB.requirements.map(r=>`<li>${r}</li>`).join('')}
+      </ul>
+      <button class="btn accent" style="margin-top:10px;" onclick="openApply()">Apply for this role →</button>
+    </div>`;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-jobdetail').classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+}
+
+/* ============================= APPLY FORM ============================= */
+function openApply(){
+  if(!CURRENT_JOB) return;
+  document.getElementById('applywrap').innerHTML = `
+    <button class="backlink" onclick="openJob('${CURRENT_JOB.id}')">← Back to role</button>
+    <div class="card">
+      <span class="eyebrow">Applying for</span>
+      <h2 style="margin:6px 0 20px;">${CURRENT_JOB.title}</h2>
+      <form id="applyform">
+        <div class="grid2">
+          <div class="field"><label>Full name</label><input required id="af-name"></div>
+          <div class="field"><label>Email</label><input required type="email" id="af-email"></div>
+        </div>
+        <div class="grid2">
+          <div class="field"><label>Phone</label><input id="af-phone"></div>
+          <div class="field"><label>LinkedIn / portfolio URL</label><input id="af-link"></div>
+        </div>
+        <div class="field"><label>Why Gridworks, and why this role?</label><textarea required id="af-why" placeholder="A few sentences — we read every one."></textarea></div>
+        <div class="field"><label>Relevant experience, briefly</label><textarea required id="af-exp"></textarea></div>
+        <div class="field"><label>Earliest start date</label><input id="af-start" placeholder="e.g. 4 weeks notice"></div>
+        <div class="field"><label>Paste your CV / resume text</label><textarea required id="af-cv" placeholder="Paste the text of your resume here" style="min-height:140px;"></textarea></div>
+        <button class="btn accent" type="submit">Submit application →</button>
+      </form>
+    </div>`;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-apply').classList.add('active');
+  window.scrollTo({top:0,behavior:'instant'});
+  document.getElementById('applyform').addEventListener('submit', submitApplication);
+}
+async function submitApplication(e){
+  e.preventDefault();
+  const id = genAppId();
+  const rec = {
+    id, jobId: CURRENT_JOB.id, jobTitle: CURRENT_JOB.title,
+    name: document.getElementById('af-name').value,
+    email: document.getElementById('af-email').value,
+    phone: document.getElementById('af-phone').value,
+    link: document.getElementById('af-link').value,
+    why: document.getElementById('af-why').value,
+    experience: document.getElementById('af-exp').value,
+    startDate: document.getElementById('af-start').value,
+    cv: document.getElementById('af-cv').value,
+    stage: "Applied",
+    appliedAt: new Date().toISOString(),
+    history: [{stage:"Applied", at:new Date().toISOString(), note:"Application submitted."}],
+    interview: null,
+    notes: ""
+  };
+  APPLICANTS[id] = rec;
+  await saveApplicants();
+  document.getElementById('applywrap').innerHTML = `
+    <div class="card" style="text-align:center;">
+      <span class="eyebrow">Application received</span>
+      <h2 style="margin:10px 0;">You're in the pipeline.</h2>
+      <p class="small" style="margin-bottom:18px;">Save this ID — you'll need it with your email to check status.</p>
+      <div class="idbadge">${id}</div>
+      <div style="margin-top:26px;display:flex;gap:10px;justify-content:center;">
+        <button class="btn ghost" data-nav="careers">Browse more roles</button>
+        <button class="btn accent" data-nav="status">Check status now</button>
+      </div>
+    </div>`;
+  showToast("Application "+id+" submitted");
+}
+
+/* ============================= STATUS CHECK ============================= */
+async function checkStatus(){
+  const id = document.getElementById('stat-id').value.trim();
+  const email = document.getElementById('stat-email').value.trim().toLowerCase();
+  const box = document.getElementById('statresult');
+  const rec = APPLICANTS[id];
+  if(!rec || rec.email.toLowerCase() !== email){
+    box.innerHTML = `<div class="empty">No matching application found. Double check your ID and email.</div>`;
+    return;
+  }
+  const idx = ACTIVE_STAGES.indexOf(rec.stage);
+  const rejected = rec.stage === "Rejected";
+  box.innerHTML = `
+    <h3 style="margin:0 0 4px;">${rec.jobTitle}</h3>
+    <div class="small" style="margin-bottom:14px;">Applied ${fmtDate(rec.appliedAt)} · ${rec.id}</div>
+    <div class="pipeline">
+      ${rejected
+        ? `<div class="stage rejected" style="flex:1;"><div class="node">—</div><div class="lbl">Not moving forward</div></div>`
+        : ACTIVE_STAGES.map((s,i)=>`<div class="stage ${i===idx?'current':(i<idx?'done':'')}"><div class="node">0${i+1}</div><div class="lbl">${s}</div></div>`).join('')}
+    </div>
+    ${rec.interview ? `<div class="csrcard" style="margin-top:18px;"><h3>Interview scheduled</h3><p>${rec.interview.date} at ${rec.interview.time} · ${rec.interview.mode} · with ${rec.interview.interviewer}</p></div>` : ''}
+    <h4 style="margin-top:22px;font-size:0.85rem;">Timeline</h4>
+    <div style="border-left:2px solid var(--line);padding-left:14px;margin-top:10px;">
+      ${rec.history.map(h=>`<div style="margin-bottom:12px;"><div style="font-weight:600;font-size:0.85rem;">${h.stage}</div><div class="small">${fmtDate(h.at)} — ${h.note||''}</div></div>`).join('')}
+    </div>
+  `;
+}
+
+/* ============================= ADMIN / ATS ============================= */
+function renderAdmin(){
+  if(!isAdmin){
+    document.getElementById('adminwrap').innerHTML = `
+      <div class="gate">
+        <span class="eyebrow">Team portal</span>
+        <h2 style="margin:10px 0 6px;">Recruiting access</h2>
+        <p class="small" style="margin-bottom:18px;">Internal use — talent acquisition team only.</p>
+        <input id="admin-pass" type="password" placeholder="Passcode" style="width:100%;padding:11px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:12px;background:var(--panel);">
+        <button class="btn accent" style="width:100%;justify-content:center;" onclick="tryAdminLogin()">Enter</button>
+        <p class="small" style="margin-top:14px;">Demo passcode: <span class="mono">gridworks-admin</span></p>
+        <div id="admin-err" style="color:var(--danger);font-size:0.82rem;margin-top:8px;"></div>
+      </div>`;
+    return;
+  }
+  document.getElementById('adminwrap').innerHTML = `
+    <div class="adminbar">
+      <div>
+        <span class="eyebrow">Talent acquisition</span>
+        <h2 style="margin:6px 0 0;">Applicant tracking</h2>
+      </div>
+      <div class="adtabs">
+        <button class="${ADMIN_VIEW==='board'?'active':''}" onclick="setAdminView('board')">Board</button>
+        <button class="${ADMIN_VIEW==='database'?'active':''}" onclick="setAdminView('database')">Database</button>
+        <button class="${ADMIN_VIEW==='postjob'?'active':''}" onclick="setAdminView('postjob')">Post a role</button>
+      </div>
+    </div>
+    <div id="adminbody"></div>
+  `;
+  renderAdminBody();
+}
+function setAdminView(v){ ADMIN_VIEW = v; renderAdmin(); }
+function tryAdminLogin(){
+  const v = document.getElementById('admin-pass').value;
+  if(v === 'gridworks-admin'){ isAdmin = true; renderAdmin(); }
+  else{ document.getElementById('admin-err').textContent = "Incorrect passcode."; }
+}
+function renderAdminBody(){
+  const body = document.getElementById('adminbody');
+  const all = Object.values(APPLICANTS).sort((a,b)=> new Date(b.appliedAt)-new Date(a.appliedAt));
+  if(ADMIN_VIEW === 'board'){
+    body.innerHTML = `<div class="board">${ACTIVE_STAGES.concat(["Rejected"]).map(stage=>{
+      const items = all.filter(a=>a.stage===stage);
+      return `<div class="col">
+        <h4>${stage}<span>${items.length}</span></h4>
+        ${items.length? items.map(a=>`
+          <div class="accard" data-id="${a.id}">
+            <div class="nm">${a.name}</div>
+            <div class="rl">${a.jobTitle}</div>
+            <div class="id">${a.id}</div>
+          </div>`).join('') : `<div class="empty" style="padding:14px 0;font-size:0.76rem;">Empty</div>`}
+      </div>`;
+    }).join('')}</div>`;
+    body.querySelectorAll('.accard').forEach(c=>c.addEventListener('click', ()=>openDrawer(c.dataset.id)));
+  } else if(ADMIN_VIEW === 'database'){
+    const filtered = all.filter(a=>{
+      const matchesStage = ADMIN_STAGE_FILTER==='all' || a.stage===ADMIN_STAGE_FILTER;
+      const s = ADMIN_SEARCH.toLowerCase();
+      const matchesSearch = !s || a.name.toLowerCase().includes(s) || a.jobTitle.toLowerCase().includes(s) || a.email.toLowerCase().includes(s) || a.id.toLowerCase().includes(s);
+      return matchesStage && matchesSearch;
+    });
+    body.innerHTML = `
+      <div class="searchbar">
+        <input id="db-search" placeholder="Search name, role, email, ID..." value="${ADMIN_SEARCH}">
+        <select id="db-stage" style="padding:10px;border-radius:8px;border:1.5px solid var(--line);">
+          <option value="all">All stages</option>
+          ${STAGES.map(s=>`<option value="${s}" ${ADMIN_STAGE_FILTER===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="card" style="padding:0;overflow-x:auto;">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Applied</th><th>Stage</th><th>Email</th></tr></thead>
+          <tbody>
+            ${filtered.length ? filtered.map(a=>`
+              <tr data-id="${a.id}" style="cursor:pointer;">
+                <td class="mono">${a.id}</td><td>${a.name}</td><td>${a.jobTitle}</td>
+                <td>${fmtDate(a.appliedAt)}</td><td><span class="pill ${a.stage}">${a.stage}</span></td><td>${a.email}</td>
+              </tr>`).join('') : `<tr><td colspan="6" class="empty">No applicants match.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+      <div class="small" style="margin-top:10px;">${filtered.length} of ${all.length} applicants — full research-grade export available on request.</div>
+    `;
+    body.querySelectorAll('tr[data-id]').forEach(r=>r.addEventListener('click', ()=>openDrawer(r.dataset.id)));
+    document.getElementById('db-search').addEventListener('input', e=>{ ADMIN_SEARCH=e.target.value; renderAdminBody(); });
+    document.getElementById('db-stage').addEventListener('change', e=>{ ADMIN_STAGE_FILTER=e.target.value; renderAdminBody(); });
+  } else if(ADMIN_VIEW === 'postjob'){
+    body.innerHTML = `
+      <div class="card" style="max-width:640px;">
+        <h3 style="margin-top:0;">Post a new role</h3>
+        <form id="postjobform">
+          <div class="grid2">
+            <div class="field"><label>Title</label><input required id="pj-title"></div>
+            <div class="field"><label>Department</label><input required id="pj-dept"></div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label>Location</label><input required id="pj-loc"></div>
+            <div class="field"><label>Type</label><input required id="pj-type" value="Full-time"></div>
+          </div>
+          <div class="field"><label>Summary (one line)</label><input required id="pj-summary"></div>
+          <div class="field"><label>Description</label><textarea required id="pj-desc"></textarea></div>
+          <div class="field"><label>Requirements (one per line)</label><textarea required id="pj-reqs"></textarea></div>
+          <button class="btn accent" type="submit">Publish role →</button>
+        </form>
+      </div>`;
+    document.getElementById('postjobform').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const id = 'role-'+document.getElementById('pj-title').value.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40)+'-'+Date.now().toString().slice(-4);
+      JOBS.unshift({
+        id, title:document.getElementById('pj-title').value, dept:document.getElementById('pj-dept').value,
+        location:document.getElementById('pj-loc').value, type:document.getElementById('pj-type').value,
+        summary:document.getElementById('pj-summary').value, description:document.getElementById('pj-desc').value,
+        requirements: document.getElementById('pj-reqs').value.split('\n').map(s=>s.trim()).filter(Boolean)
+      });
+      await saveJobs();
+      showToast("Role published to Careers");
+      setAdminView('postjob');
+    });
+  }
+}
+
+/* ---- applicant drawer ---- */
+function openDrawer(id){
+  const a = APPLICANTS[id];
+  if(!a) return;
+  const bd = document.getElementById('drawerBackdrop');
+  document.getElementById('drawerContent').innerHTML = `
+    <button class="closex" onclick="closeDrawer()">&times;</button>
+    <span class="eyebrow">${a.id}</span>
+    <h3>${a.name}</h3>
+    <div class="small">${a.jobTitle} · applied ${fmtDate(a.appliedAt)}</div>
+    <div class="stagebtns">
+      ${STAGES.map(s=>`<button class="${a.stage===s?'current':''}" onclick="moveStage('${a.id}','${s}')">${s}</button>`).join('')}
+    </div>
+    <div class="small"><b>Email</b> ${a.email}<br><b>Phone</b> ${a.phone||'—'}<br><b>Link</b> ${a.link?`<a href="${a.link}" target="_blank" rel="noopener">${a.link}</a>`:'—'}<br><b>Earliest start</b> ${a.startDate||'—'}</div>
+
+    <div class="card" style="margin-top:16px;">
+      <h4 style="margin-top:0;font-size:0.85rem;">Why this role</h4>
+      <p style="font-size:0.87rem;line-height:1.5;">${a.why}</p>
+      <h4 style="font-size:0.85rem;">Relevant experience</h4>
+      <p style="font-size:0.87rem;line-height:1.5;">${a.experience}</p>
+      <h4 style="font-size:0.85rem;">CV</h4>
+      <p style="font-size:0.82rem;line-height:1.5;white-space:pre-wrap;max-height:160px;overflow-y:auto;background:var(--bg);padding:10px;border-radius:6px;">${a.cv}</p>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h4 style="margin-top:0;font-size:0.85rem;">Interview</h4>
+      ${a.interview ? `<p class="small">${a.interview.date} at ${a.interview.time} · ${a.interview.mode} · with ${a.interview.interviewer}</p>` : `<p class="small">Not scheduled.</p>`}
+      <div class="grid2">
+        <div class="field"><label>Date</label><input type="date" id="iv-date" value="${a.interview?a.interview.date:''}"></div>
+        <div class="field"><label>Time</label><input type="time" id="iv-time" value="${a.interview?a.interview.time:''}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Mode</label><select id="iv-mode">
+          <option ${a.interview&&a.interview.mode==='Video call'?'selected':''}>Video call</option>
+          <option ${a.interview&&a.interview.mode==='Phone screen'?'selected':''}>Phone screen</option>
+          <option ${a.interview&&a.interview.mode==='On-site'?'selected':''}>On-site</option>
+        </select></div>
+        <div class="field"><label>Interviewer</label><input id="iv-interviewer" value="${a.interview?a.interview.interviewer:''}"></div>
+      </div>
+      <button class="btn ghost sm" onclick="scheduleInterview('${a.id}')">Save interview</button>
+    </div>
+
+    <div class="note">
+      <label style="font-size:0.82rem;font-weight:600;">Recruiter notes</label>
+      <textarea id="an-notes" style="width:100%;min-height:90px;padding:10px;border:1.5px solid var(--line);border-radius:8px;margin-top:6px;font-family:inherit;">${a.notes||''}</textarea>
+      <button class="btn ghost sm" style="margin-top:8px;" onclick="saveNotes('${a.id}')">Save notes</button>
+    </div>
+  `;
+  bd.classList.add('open');
+}
+function closeDrawer(){ document.getElementById('drawerBackdrop').classList.remove('open'); renderAdminBody(); }
+document.getElementById('drawerBackdrop').addEventListener('click', e=>{ if(e.target.id==='drawerBackdrop') closeDrawer(); });
+
+async function moveStage(id, stage){
+  const a = APPLICANTS[id]; if(!a) return;
+  a.stage = stage;
+  a.history.push({stage, at:new Date().toISOString(), note:`Moved to ${stage} by recruiting team.`});
+  await saveApplicants();
+  openDrawer(id);
+  showToast(`${a.name} moved to ${stage}`);
+}
+async function scheduleInterview(id){
+  const a = APPLICANTS[id]; if(!a) return;
+  a.interview = {
+    date: document.getElementById('iv-date').value,
+    time: document.getElementById('iv-time').value,
+    mode: document.getElementById('iv-mode').value,
+    interviewer: document.getElementById('iv-interviewer').value
+  };
+  if(a.stage !== 'Interview'){
+    a.stage = 'Interview';
+    a.history.push({stage:'Interview', at:new Date().toISOString(), note:'Interview scheduled.'});
+  } else {
+    a.history.push({stage:'Interview', at:new Date().toISOString(), note:'Interview details updated.'});
+  }
+  await saveApplicants();
+  openDrawer(id);
+  showToast('Interview saved');
+}
+async function saveNotes(id){
+  const a = APPLICANTS[id]; if(!a) return;
+  a.notes = document.getElementById('an-notes').value;
+  await saveApplicants();
+  showToast('Notes saved');
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ============================= INIT ============================= */
+(async function init(){
+  renderNav('home');
+  await loadData();
+  goTo('home');
+})();
+</script>
+</body>
+</html>
